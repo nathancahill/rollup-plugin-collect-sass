@@ -77,6 +77,21 @@ test('with importOnce', done => rollup({
     done()
 }))
 
+test('with duplicate js imports', done => rollup({
+    entry: 'fixtures/dedupe-js.js',
+    plugins: [
+        collectSass({
+            importOnce: true,
+        }),
+    ],
+}).then(bundle => {
+    const output = unJS(bundle.generate({ format: 'es' }).code)
+    const expected = `"${unJS(fs.readFileSync('fixtures/dedupe-js-output.css').toString())}"`
+
+    expect(output).toEqual(expect.stringContaining(expected))
+    done()
+}))
+
 test('import node_modules', done => rollup({
     entry: 'fixtures/node-modules.js',
     plugins: [
