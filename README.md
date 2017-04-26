@@ -54,7 +54,7 @@ export default {
 
 ### `importOnce`
 
-Boolean, if set to `true`, all scss imports are deduped after absolute paths are resolved. Default: `false` to match default libsass/Ruby Sass behavior.
+Boolean, if set to `true`, all Sass `@import` statements are deduped after absolute paths are resolved. Default: `false` to match default libsass/Ruby Sass behavior.
 
 #### `extensions`
 
