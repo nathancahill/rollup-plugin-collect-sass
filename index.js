@@ -133,7 +133,7 @@ export default (options = {}) => {
                         return `'${nodeResolve}'`
                     }
 
-                    console.error(`Unresolved path in ${id}: ${name}`)
+                    this.warn(`Unresolved path in ${id}: ${name}`)
 
                     return orgName
                 })
