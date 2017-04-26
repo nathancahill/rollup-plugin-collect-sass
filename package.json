@@ -1,0 +1,29 @@
+{
+  "name": "rollup-plugin-collect-sass",
+  "version": "1.0.0",
+  "description": "Transform Sass in a single context",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nathancahill/rollup-plugin-collect-sass.git"
+  },
+  "author": "Nathan Cahill <nathan@nathancahill.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nathancahill/rollup-plugin-collect-sass/issues"
+  },
+  "homepage": "https://github.com/nathancahill/rollup-plugin-collect-sass#readme",
+  "dependencies": {
+    "node-sass": ">= 3.8.0",
+    "resolve": "^1.3.3",
+    "rollup-pluginutils": ">= 1.3.1",
+    "style-inject": "^0.1.0"
+  },
+  "devDependencies": {
+    "babel-jest": "^19.0.0",
+    "babel-preset-es2015": "^6.24.1",
+    "bootstrap": "^4.0.0-alpha.6",
+    "jest": "^19.0.2",
+    "rollup": "^0.41.6"
+  }
+}

@@ -1,0 +1,212 @@
+
+import fs from 'fs'
+import path from 'path'
+import resolve from 'resolve'
+import styleInject from 'style-inject'
+import sass from 'node-sass'
+import { createFilter } from 'rollup-pluginutils'
+
+const START_COMMENT_FLAG = '/* collect-postcss-start'
+const END_COMMENT_FLAG = 'collect-postcss-end */'
+
+const escapeRegex = str => str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
+
+const findRegex = new RegExp(`${escapeRegex(START_COMMENT_FLAG)}([^]*?)${escapeRegex(END_COMMENT_FLAG)}`, 'g')
+const replaceRegex = new RegExp(`${escapeRegex(START_COMMENT_FLAG)}[^]*?${escapeRegex(END_COMMENT_FLAG)}`)
+const importRegex = new RegExp('@import([^;]*);', 'g')
+
+const importExtensions = ['.scss', '.sass']
+const injectFnName = '__$styleInject'
+const injectStyleFuncCode = styleInject
+    .toString()
+    .replace(/styleInject/, injectFnName)
+
+export default (options = {}) => {
+    const extensions = options.extensions || importExtensions
+    const filter = createFilter(options.include || ['**/*.scss', '**/*.sass'], options.exclude)
+    const extract = Boolean(options.extract)
+    const extractPath = typeof options.extract === 'string' ? options.extract : null
+    const importOnce = Boolean(options.importOnce)
+
+    let cssExtract = ''
+    let visitedImports = new Set()
+
+    return {
+        name: 'collect-sass',
+        intro () {
+            if (extract) {
+                return
+            }
+
+            return injectStyleFuncCode
+        },
+        transform (code, id) {
+            if (!filter(id)) { return }
+            if (extensions.indexOf(path.extname(id)) === -1) { return }
+
+            const relBase = path.dirname(id)
+
+            // Resolve imports before lossing relative file info
+            // Find all import statements to replace
+            const transformed = code.replace(importRegex, (match, p1) => {
+                const paths = p1.split(/[,]/).map(p => {
+                    const orgName = p.trim()  // strip whitespace
+                    let name = orgName
+
+                    if (name[0] === name[name.length - 1] && (name[0] === '"' || name[0] === "'")) {
+                        name = name.substring(1, name.length - 1)  // string quotes
+                    }
+
+                    // Exclude CSS @import: http://sass-lang.com/documentation/file.SASS_REFERENCE.html#import
+                    if (path.extname(name) === '.css') { return orgName }
+                    if (name.startsWith('http://')) { return orgName }
+                    if (name.startsWith('url(')) { return orgName }
+
+                    const fileName = path.basename(name)
+                    const dirName = path.dirname(name)
+
+                    // libsass's file name resolution: https://github.com/sass/node-sass/blob/1b9970a/src/libsass/src/file.cpp#L300
+                    if (fs.existsSync(path.join(relBase, dirName, fileName))) {
+                        const absPath = path.join(relBase, name)
+
+                        if (importOnce && visitedImports.has(absPath)) {
+                            return null
+                        }
+
+                        visitedImports.add(absPath)
+                        return `'${absPath}`
+                    }
+
+                    if (fs.existsSync(path.join(relBase, dirName, `_${fileName}`))) {
+                        const absPath = path.join(relBase, `_${name}`)
+
+                        if (importOnce && visitedImports.has(absPath)) {
+                            return null
+                        }
+
+                        visitedImports.add(absPath)
+                        return `'${absPath}'`
+                    }
+
+                    for (var i = 0; i < importExtensions.length; i++) {
+                        const absPath = path.join(relBase, dirName, `_${fileName}${importExtensions[i]}`)
+
+                        if (fs.existsSync(absPath)) {
+                            if (importOnce && visitedImports.has(absPath)) {
+                                return null
+                            }
+
+                            visitedImports.add(absPath)
+                            return `'${absPath}'`
+                        }
+                    }
+
+                    for (var i = 0; i < importExtensions.length; i++) {
+                        const absPath = path.join(relBase, `${name}${importExtensions[i]}`)
+
+                        if (fs.existsSync(absPath)) {
+                            if (importOnce && visitedImports.has(absPath)) {
+                                return null
+                            }
+
+                            visitedImports.add(absPath)
+                            return `'${absPath}'`
+                        }
+                    }
+
+                    let nodeResolve
+
+                    try {
+                        nodeResolve = resolve.sync(path.join(dirName, `_${fileName}`), { extensions })
+                    } catch (e) {}
+
+                    if (nodeResolve) {
+                        if (importOnce && visitedImports.has(nodeResolve)) {
+                            return null
+                        }
+
+                        visitedImports.add(nodeResolve)
+                        return `'${nodeResolve}'`
+                    }
+
+                    try {
+                        nodeResolve = resolve.sync(path.join(dirName, fileName), { extensions })
+                    } catch (e) {}
+
+                    if (nodeResolve) {
+                        if (importOnce && visitedImports.has(nodeResolve)) {
+                            return null
+                        }
+
+                        visitedImports.add(nodeResolve)
+                        return `'${nodeResolve}'`
+                    }
+
+                    console.error(`Unresolved path in ${id}: ${name}`)
+                })
+
+                const uniquePaths = paths.filter(p => p !== null)
+
+                if (uniquePaths.length) {
+                    return `@import ${uniquePaths.join(', ')};`
+                }
+
+                return ''
+            })
+
+            // Add sass imports to bundle as JS comment blocks
+            return {
+                code: START_COMMENT_FLAG + transformed + END_COMMENT_FLAG,
+                map: { mappings: '' },
+            }
+        },
+        transformBundle (source) {
+            // Reset paths
+            visitedImports = new Set()
+
+            // Extract each sass file from comment blocks
+            let accum = ''
+            let match = findRegex.exec(source)
+
+            while (match !== null) {
+                accum += match[1]
+                match = findRegex.exec(source)
+            }
+
+            // Transform sass
+            const css = sass.renderSync({
+                data: accum,
+            }).css.toString()
+
+            if (!extract) {
+                const injected = `${injectFnName}(${JSON.stringify(css)});`
+
+                // Replace first instance with output. Remove all other instances
+                return source.replace(replaceRegex, injected).replace(findRegex, '')
+            }
+
+            // Store css for writing
+            cssExtract = css
+
+            // Remove all other instances
+            return source.replace(findRegex, '')
+        },
+        onwrite(opts) {
+            if (extract) {
+                return new Promise((resolve, reject) => {
+                    let destPath = extractPath ?
+                        extractPath :
+                        path.join(
+                            path.dirname(opts.dest),
+                            path.basename(opts.dest, path.extname(opts.dest)) + '.css'
+                        )
+
+                    fs.writeFile(destPath, cssExtract, err => {
+                        if (err) { reject(err) }
+                        resolve()
+                    })
+                })
+            }
+        }
+    }
+}
