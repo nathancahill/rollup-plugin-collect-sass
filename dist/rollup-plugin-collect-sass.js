@@ -40,14 +40,16 @@ var index = function (options) {
         name: 'collect-sass',
         intro: function intro () {
             if (extract) {
-                return
+                return null
             }
 
             return injectStyleFuncCode
         },
         transform: function transform (code, id) {
-            if (!filter(id)) { return }
-            if (extensions.indexOf(path.extname(id)) === -1) { return }
+            var this$1 = this;
+
+            if (!filter(id)) { return null }
+            if (extensions.indexOf(path.extname(id)) === -1) { return null }
 
             var relBase = path.dirname(id);
 
@@ -93,7 +95,7 @@ var index = function (options) {
                         return ("'" + absPath$1 + "'")
                     }
 
-                    for (var i = 0; i < importExtensions.length; i++) {
+                    for (var i = 0; i < importExtensions.length; i += 1) {
                         var absPath$2 = path.join(relBase, dirName, ("_" + fileName + (importExtensions[i])));
 
                         if (fs.existsSync(absPath$2)) {
@@ -106,8 +108,8 @@ var index = function (options) {
                         }
                     }
 
-                    for (var i = 0; i < importExtensions.length; i++) {
-                        var absPath$3 = path.join(relBase, ("" + name + (importExtensions[i])));
+                    for (var i$1 = 0; i$1 < importExtensions.length; i$1 += 1) {
+                        var absPath$3 = path.join(relBase, ("" + name + (importExtensions[i$1])));
 
                         if (fs.existsSync(absPath$3)) {
                             if (importOnce && visitedImports.has(absPath$3)) {
@@ -123,20 +125,11 @@ var index = function (options) {
 
                     try {
                         nodeResolve = resolve.sync(path.join(dirName, ("_" + fileName)), { extensions: extensions });
-                    } catch (e) {}
-
-                    if (nodeResolve) {
-                        if (importOnce && visitedImports.has(nodeResolve)) {
-                            return null
-                        }
-
-                        visitedImports.add(nodeResolve);
-                        return ("'" + nodeResolve + "'")
-                    }
+                    } catch (e) {} // eslint-disable-line no-empty
 
                     try {
                         nodeResolve = resolve.sync(path.join(dirName, fileName), { extensions: extensions });
-                    } catch (e) {}
+                    } catch (e) {} // eslint-disable-line no-empty
 
                     if (nodeResolve) {
                         if (importOnce && visitedImports.has(nodeResolve)) {
@@ -147,7 +140,9 @@ var index = function (options) {
                         return ("'" + nodeResolve + "'")
                     }
 
-                    console.error(("Unresolved path in " + id + ": " + name));
+                    this$1.warn(("Unresolved path in " + id + ": " + name));
+
+                    return orgName
                 });
 
                 var uniquePaths = paths.filter(function (p) { return p !== null; });
@@ -181,6 +176,7 @@ var index = function (options) {
             // Transform sass
             var css = sass.renderSync({
                 data: accum,
+                includePaths: ['node_modules'],
             }).css.toString();
 
             if (!extract) {
@@ -196,23 +192,21 @@ var index = function (options) {
             // Remove all other instances
             return source.replace(findRegex, '')
         },
-        onwrite: function onwrite(opts) {
+        onwrite: function onwrite (opts) {
             if (extract) {
-                return new Promise(function (resolve$$1, reject) {
-                    var destPath = extractPath ?
-                        extractPath :
-                        path.join(
-                            path.dirname(opts.dest),
-                            path.basename(opts.dest, path.extname(opts.dest)) + '.css'
-                        );
+                return new Promise(function (resolveExtract, rejectExtract) {
+                    var destPath = extractPath ||
+                        path.join(path.dirname(opts.dest), ((path.basename(opts.dest, path.extname(opts.dest))) + ".css"));
 
                     fs.writeFile(destPath, cssExtract, function (err) {
-                        if (err) { reject(err); }
-                        resolve$$1();
+                        if (err) { rejectExtract(err); }
+                        resolveExtract();
                     });
                 })
             }
-        }
+
+            return null
+        },
     }
 };
 
