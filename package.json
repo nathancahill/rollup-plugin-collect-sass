@@ -4,6 +4,7 @@
   "description": "Transform Sass in a single context",
   "main": "dist/rollup-plugin-collect-sass.js",
   "scripts": {
+    "build": "rollup -c",
     "test": "npm run lint && jest",
     "lint": "eslint ."
   },
