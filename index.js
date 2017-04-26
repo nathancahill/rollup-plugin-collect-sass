@@ -169,6 +169,7 @@ export default (options = {}) => {
             // Transform sass
             const css = sass.renderSync({
                 data: accum,
+                includePaths: ['node_modules'],
             }).css.toString()
 
             if (!extract) {
