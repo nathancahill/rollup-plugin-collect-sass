@@ -35,14 +35,14 @@ export default (options = {}) => {
         name: 'collect-sass',
         intro () {
             if (extract) {
-                return
+                return null
             }
 
             return injectStyleFuncCode
         },
         transform (code, id) {
-            if (!filter(id)) { return }
-            if (extensions.indexOf(path.extname(id)) === -1) { return }
+            if (!filter(id)) { return null }
+            if (extensions.indexOf(path.extname(id)) === -1) { return null }
 
             const relBase = path.dirname(id)
 
@@ -88,7 +88,7 @@ export default (options = {}) => {
                         return `'${absPath}'`
                     }
 
-                    for (var i = 0; i < importExtensions.length; i++) {
+                    for (let i = 0; i < importExtensions.length; i += 1) {
                         const absPath = path.join(relBase, dirName, `_${fileName}${importExtensions[i]}`)
 
                         if (fs.existsSync(absPath)) {
@@ -101,7 +101,7 @@ export default (options = {}) => {
                         }
                     }
 
-                    for (var i = 0; i < importExtensions.length; i++) {
+                    for (let i = 0; i < importExtensions.length; i += 1) {
                         const absPath = path.join(relBase, `${name}${importExtensions[i]}`)
 
                         if (fs.existsSync(absPath)) {
@@ -118,20 +118,11 @@ export default (options = {}) => {
 
                     try {
                         nodeResolve = resolve.sync(path.join(dirName, `_${fileName}`), { extensions })
-                    } catch (e) {}
-
-                    if (nodeResolve) {
-                        if (importOnce && visitedImports.has(nodeResolve)) {
-                            return null
-                        }
-
-                        visitedImports.add(nodeResolve)
-                        return `'${nodeResolve}'`
-                    }
+                    } catch (e) {} // eslint-disable-line no-empty
 
                     try {
                         nodeResolve = resolve.sync(path.join(dirName, fileName), { extensions })
-                    } catch (e) {}
+                    } catch (e) {} // eslint-disable-line no-empty
 
                     if (nodeResolve) {
                         if (importOnce && visitedImports.has(nodeResolve)) {
@@ -143,6 +134,8 @@ export default (options = {}) => {
                     }
 
                     console.error(`Unresolved path in ${id}: ${name}`)
+
+                    return orgName
                 })
 
                 const uniquePaths = paths.filter(p => p !== null)
@@ -191,22 +184,20 @@ export default (options = {}) => {
             // Remove all other instances
             return source.replace(findRegex, '')
         },
-        onwrite(opts) {
+        onwrite (opts) {
             if (extract) {
-                return new Promise((resolve, reject) => {
-                    let destPath = extractPath ?
-                        extractPath :
-                        path.join(
-                            path.dirname(opts.dest),
-                            path.basename(opts.dest, path.extname(opts.dest)) + '.css'
-                        )
+                return new Promise((resolveExtract, rejectExtract) => {
+                    const destPath = extractPath ||
+                        path.join(path.dirname(opts.dest), `${path.basename(opts.dest, path.extname(opts.dest))}.css`)
 
                     fs.writeFile(destPath, cssExtract, err => {
-                        if (err) { reject(err) }
-                        resolve()
+                        if (err) { rejectExtract(err) }
+                        resolveExtract()
                     })
                 })
             }
-        }
+
+            return null
+        },
     }
 }
