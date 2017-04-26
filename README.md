@@ -16,7 +16,7 @@ Most methods for transforming Sass with Rollup operate on an individual file lev
 
 The common solution is to collect all Sass imports into a single Sass entrypoint (like `index.scss`), which is then imported once for Rollup. However, this solution is not ideal, because this second entrypoint must be kept in sync with the bundled components.
 
-Instead, each component could import the exact Sass files it requires. This is especially useful for libraries, where modular components and CSS is desirable. To support this, two problems must be solved:
+Instead, each component could import the exact Sass files it requires. This is __especially useful for libraries, where modular components and CSS is desirable__. To support this, two problems must be solved:
 
  - Import bloat (duplicate Sass imports in the final bundle)
  - Single context (variables defined in one import are not available in the next)
