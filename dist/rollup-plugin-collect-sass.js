@@ -173,21 +173,23 @@ var index = function (options) {
                 match = findRegex.exec(source);
             }
 
-            // Transform sass
-            var css = sass.renderSync({
-                data: accum,
-                includePaths: ['node_modules'],
-            }).css.toString();
+            if (accum) {
+                // Transform sass
+                var css = sass.renderSync({
+                    data: accum,
+                    includePaths: ['node_modules'],
+                }).css.toString();
 
-            if (!extract) {
-                var injected = injectFnName + "(" + (JSON.stringify(css)) + ");";
+                if (!extract) {
+                    var injected = injectFnName + "(" + (JSON.stringify(css)) + ");";
 
-                // Replace first instance with output. Remove all other instances
-                return source.replace(replaceRegex, injected).replace(findRegex, '')
+                    // Replace first instance with output. Remove all other instances
+                    return source.replace(replaceRegex, injected).replace(findRegex, '')
+                }
+
+                // Store css for writing
+                cssExtract = css;
             }
-
-            // Store css for writing
-            cssExtract = css;
 
             // Remove all other instances
             return source.replace(findRegex, '')
