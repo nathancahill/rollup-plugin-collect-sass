@@ -188,7 +188,7 @@ export default (options = {}) => {
             return source.replace(findRegex, '')
         },
         onwrite (opts) {
-            if (extract) {
+            if (extract && cssExtract) {
                 return new Promise((resolveExtract, rejectExtract) => {
                     const destPath = extractPath ||
                         path.join(path.dirname(opts.dest), `${path.basename(opts.dest, path.extname(opts.dest))}.css`)
