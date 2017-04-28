@@ -195,7 +195,7 @@ var index = function (options) {
             return source.replace(findRegex, '')
         },
         onwrite: function onwrite (opts) {
-            if (extract) {
+            if (extract && cssExtract) {
                 return new Promise(function (resolveExtract, rejectExtract) {
                     var destPath = extractPath ||
                         path.join(path.dirname(opts.dest), ((path.basename(opts.dest, path.extname(opts.dest))) + ".css"));
