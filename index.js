@@ -45,7 +45,8 @@ export default (options = {}) => {
             if (extensions.indexOf(path.extname(id)) === -1) { return null }
 
             const relBase = path.dirname(id)
-            const fileImports = new Set()
+            const fileImports = new Set([id])
+            visitedImports.add(id)
 
             // Resolve imports before lossing relative file info
             // Find all import statements to replace
