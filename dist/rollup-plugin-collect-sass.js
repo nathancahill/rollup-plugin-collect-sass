@@ -52,7 +52,8 @@ var index = function (options) {
             if (extensions.indexOf(path.extname(id)) === -1) { return null }
 
             var relBase = path.dirname(id);
-            var fileImports = new Set();
+            var fileImports = new Set([id]);
+            visitedImports.add(id);
 
             // Resolve imports before lossing relative file info
             // Find all import statements to replace
