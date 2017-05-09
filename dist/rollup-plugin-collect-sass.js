@@ -52,6 +52,7 @@ var index = function (options) {
             if (extensions.indexOf(path.extname(id)) === -1) { return null }
 
             var relBase = path.dirname(id);
+            var fileImports = new Set();
 
             // Resolve imports before lossing relative file info
             // Find all import statements to replace
@@ -81,6 +82,7 @@ var index = function (options) {
                         }
 
                         visitedImports.add(absPath);
+                        fileImports.add(absPath);
                         return ("'" + absPath + "'")
                     }
 
@@ -92,6 +94,7 @@ var index = function (options) {
                         }
 
                         visitedImports.add(absPath$1);
+                        fileImports.add(absPath$1);
                         return ("'" + absPath$1 + "'")
                     }
 
@@ -104,6 +107,7 @@ var index = function (options) {
                             }
 
                             visitedImports.add(absPath$2);
+                            fileImports.add(absPath$2);
                             return ("'" + absPath$2 + "'")
                         }
                     }
@@ -117,6 +121,7 @@ var index = function (options) {
                             }
 
                             visitedImports.add(absPath$3);
+                            fileImports.add(absPath$3);
                             return ("'" + absPath$3 + "'")
                         }
                     }
@@ -137,6 +142,7 @@ var index = function (options) {
                         }
 
                         visitedImports.add(nodeResolve);
+                        fileImports.add(nodeResolve);
                         return ("'" + nodeResolve + "'")
                     }
 
@@ -158,6 +164,7 @@ var index = function (options) {
             return {
                 code: START_COMMENT_FLAG + transformed + END_COMMENT_FLAG,
                 map: { mappings: '' },
+                dependencies: Array.from(fileImports),
             }
         },
         transformBundle: function transformBundle (source) {
