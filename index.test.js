@@ -1,6 +1,7 @@
 
 import fs from 'fs'
 import { rollup } from 'rollup'
+import resolve from 'rollup-plugin-node-resolve'
 
 import collectSass from './index.js'
 
@@ -95,6 +96,20 @@ test('with duplicate js imports', done => rollup({
 test('import node_modules', done => rollup({
     entry: 'fixtures/node-modules.js',
     plugins: [
+        collectSass(),
+    ],
+}).then(bundle => {
+    const output = unJS(bundle.generate({ format: 'es' }).code)
+    const expected = `"${unJS(fs.readFileSync('fixtures/node-modules-output.css').toString())}"`
+
+    expect(output).toEqual(expect.stringContaining(expected))
+    done()
+}))
+
+test('import node_modules from js', done => rollup({
+    entry: 'fixtures/node-modules-js.js',
+    plugins: [
+        resolve(),
         collectSass(),
     ],
 }).then(bundle => {
