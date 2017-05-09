@@ -81,7 +81,7 @@ var index = function (options) {
                         }
 
                         visitedImports.add(absPath);
-                        return ("'" + absPath)
+                        return ("'" + absPath + "'")
                     }
 
                     if (fs.existsSync(path.join(relBase, dirName, ("_" + fileName)))) {
