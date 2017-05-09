@@ -45,6 +45,7 @@ export default (options = {}) => {
             if (extensions.indexOf(path.extname(id)) === -1) { return null }
 
             const relBase = path.dirname(id)
+            const fileImports = new Set()
 
             // Resolve imports before lossing relative file info
             // Find all import statements to replace
@@ -74,6 +75,7 @@ export default (options = {}) => {
                         }
 
                         visitedImports.add(absPath)
+                        fileImports.add(absPath)
                         return `'${absPath}'`
                     }
 
@@ -85,6 +87,7 @@ export default (options = {}) => {
                         }
 
                         visitedImports.add(absPath)
+                        fileImports.add(absPath)
                         return `'${absPath}'`
                     }
 
@@ -97,6 +100,7 @@ export default (options = {}) => {
                             }
 
                             visitedImports.add(absPath)
+                            fileImports.add(absPath)
                             return `'${absPath}'`
                         }
                     }
@@ -110,6 +114,7 @@ export default (options = {}) => {
                             }
 
                             visitedImports.add(absPath)
+                            fileImports.add(absPath)
                             return `'${absPath}'`
                         }
                     }
@@ -130,6 +135,7 @@ export default (options = {}) => {
                         }
 
                         visitedImports.add(nodeResolve)
+                        fileImports.add(nodeResolve)
                         return `'${nodeResolve}'`
                     }
 
@@ -151,6 +157,7 @@ export default (options = {}) => {
             return {
                 code: START_COMMENT_FLAG + transformed + END_COMMENT_FLAG,
                 map: { mappings: '' },
+                dependencies: Array.from(fileImports),
             }
         },
         transformBundle (source) {
