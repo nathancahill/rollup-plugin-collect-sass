@@ -185,7 +185,10 @@ export default (options = {}) => {
                     const injected = `${injectFnName}(${JSON.stringify(css)});`
 
                     // Replace first instance with output. Remove all other instances
-                    return source.replace(replaceRegex, injected).replace(findRegex, '')
+                    return {
+                        code: source.replace(replaceRegex, injected).replace(findRegex, ''),
+                        map: { mappings: '' },
+                    }
                 }
 
                 // Store css for writing
@@ -193,7 +196,10 @@ export default (options = {}) => {
             }
 
             // Remove all other instances
-            return source.replace(findRegex, '')
+            return {
+                code: source.replace(findRegex, ''),
+                map: { mappings: '' },
+            }
         },
         onwrite (opts) {
             if (extract && cssExtract) {

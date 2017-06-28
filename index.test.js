@@ -24,6 +24,20 @@ test('simple', done => rollup({
     done()
 }))
 
+test('supports sourcemaps', done => rollup({
+    entry: 'fixtures/simple.js',
+    plugins: [
+        collectSass(),
+    ],
+    sourceMap: true,
+}).then(bundle => {
+    const output = unJS(bundle.generate({ format: 'es' }).code)
+    const expected = `"${unJS(fs.readFileSync('fixtures/simple-output.css').toString())}"`
+
+    expect(output).toEqual(expect.stringContaining(expected))
+    done()
+}))
+
 test('imports', done => rollup({
     entry: 'fixtures/imports.js',
     plugins: [
