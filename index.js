@@ -8,6 +8,8 @@ import { createFilter } from 'rollup-pluginutils'
 
 const START_COMMENT_FLAG = '/* collect-postcss-start'
 const END_COMMENT_FLAG = 'collect-postcss-end */'
+const ESCAPED_END_COMMENT_FLAG = 'collect-postcss-escaped-end * /'
+const ESCAPED_END_COMMENT_REGEX = /collect-postcss-escaped-end \* \//g
 
 const escapeRegex = str => str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
 
@@ -50,7 +52,7 @@ export default (options = {}) => {
 
             // Resolve imports before lossing relative file info
             // Find all import statements to replace
-            const transformed = code.replace(importRegex, (match, p1) => {
+            let transformed = code.replace(importRegex, (match, p1) => {
                 const paths = p1.split(/[,]/).map(p => {
                     const orgName = p.trim()  // strip whitespace
                     let name = orgName
@@ -154,6 +156,9 @@ export default (options = {}) => {
                 return ''
             })
 
+            // Escape */ end comments
+            transformed = transformed.replace(/\*\//g, ESCAPED_END_COMMENT_FLAG)
+
             // Add sass imports to bundle as JS comment blocks
             return {
                 code: START_COMMENT_FLAG + transformed + END_COMMENT_FLAG,
@@ -175,6 +180,8 @@ export default (options = {}) => {
             }
 
             if (accum) {
+                // Add */ end comments back
+                accum = accum.replace(ESCAPED_END_COMMENT_REGEX, '*/')
                 // Transform sass
                 const css = sass.renderSync({
                     data: accum,

@@ -133,3 +133,16 @@ test('import node_modules from js', done => rollup({
     expect(output).toEqual(expect.stringContaining(expected))
     done()
 }))
+
+test('with multiline comments', done => rollup({
+    entry: 'fixtures/multiline.js',
+    plugins: [
+        collectSass(),
+    ],
+}).then(bundle => {
+    const output = unJS(bundle.generate({ format: 'es' }).code)
+    const expected = `"${unJS(fs.readFileSync('fixtures/multiline-output.css').toString())}"`
+
+    expect(output).toEqual(expect.stringContaining(expected))
+    done()
+}))
