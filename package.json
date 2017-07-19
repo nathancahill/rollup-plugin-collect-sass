@@ -1,6 +1,6 @@
 {
   "name": "rollup-plugin-collect-sass",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Transform Sass in a single context",
   "main": "dist/rollup-plugin-collect-sass.js",
   "files": "dist",

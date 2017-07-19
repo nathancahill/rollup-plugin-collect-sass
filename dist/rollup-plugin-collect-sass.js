@@ -11,6 +11,8 @@ var rollupPluginutils = require('rollup-pluginutils');
 
 var START_COMMENT_FLAG = '/* collect-postcss-start';
 var END_COMMENT_FLAG = 'collect-postcss-end */';
+var ESCAPED_END_COMMENT_FLAG = 'collect-postcss-escaped-end * /';
+var ESCAPED_END_COMMENT_REGEX = /collect-postcss-escaped-end \* \//g;
 
 var escapeRegex = function (str) { return str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&'); };
 
@@ -161,6 +163,9 @@ var index = function (options) {
                 return ''
             });
 
+            // Escape */ end comments
+            transformed = transformed.replace(/\*\//g, ESCAPED_END_COMMENT_FLAG);
+
             // Add sass imports to bundle as JS comment blocks
             return {
                 code: START_COMMENT_FLAG + transformed + END_COMMENT_FLAG,
@@ -182,6 +187,8 @@ var index = function (options) {
             }
 
             if (accum) {
+                // Add */ end comments back
+                accum = accum.replace(ESCAPED_END_COMMENT_REGEX, '*/');
                 // Transform sass
                 var css = sass.renderSync({
                     data: accum,
