@@ -1,7 +1,7 @@
 
 # Rollup Plugin Collect Sass
 
-[![CircleCI](https://circleci.com/gh/nathancahill/rollup-plugin-collect-sass.svg?style=svg)](https://circleci.com/gh/nathancahill/rollup-plugin-collect-sass)
+[![CircleCI](https://img.shields.io/circleci/project/github/nathancahill/rollup-plugin-collect-sass.svg)](https://circleci.com/gh/nathancahill/rollup-plugin-collect-sass)
 
 > :sleeping: Tired: minimalist 'lightweight' libraries
 > 
