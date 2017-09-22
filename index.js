@@ -27,6 +27,7 @@ export default (options = {}) => {
     const extensions = options.extensions || importExtensions
     const filter = createFilter(options.include || ['**/*.scss', '**/*.sass'], options.exclude)
     const extract = Boolean(options.extract)
+    const extractFn = typeof options.extract === 'function' ? options.extract : null
     const extractPath = typeof options.extract === 'string' ? options.extract : null
     const importOnce = Boolean(options.importOnce)
 
@@ -210,6 +211,8 @@ export default (options = {}) => {
         },
         onwrite (opts) {
             if (extract && cssExtract) {
+                if (extractFn) return extractFn(cssExtract, opts)
+
                 return new Promise((resolveExtract, rejectExtract) => {
                     const destPath = extractPath ||
                         path.join(path.dirname(opts.dest), `${path.basename(opts.dest, path.extname(opts.dest))}.css`)
