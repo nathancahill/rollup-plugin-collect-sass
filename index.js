@@ -80,7 +80,7 @@ export default (options = {}) => {
 
                         visitedImports.add(absPath)
                         fileImports.add(absPath)
-                        return `'${absPath}'`
+                        return JSON.stringify(absPath)
                     }
 
                     if (fs.existsSync(path.join(relBase, dirName, `_${fileName}`))) {
@@ -92,7 +92,7 @@ export default (options = {}) => {
 
                         visitedImports.add(absPath)
                         fileImports.add(absPath)
-                        return `'${absPath}'`
+                        return JSON.stringify(absPath)
                     }
 
                     for (let i = 0; i < importExtensions.length; i += 1) {
@@ -105,7 +105,7 @@ export default (options = {}) => {
 
                             visitedImports.add(absPath)
                             fileImports.add(absPath)
-                            return `'${absPath}'`
+                            return JSON.stringify(absPath)
                         }
                     }
 
@@ -119,7 +119,7 @@ export default (options = {}) => {
 
                             visitedImports.add(absPath)
                             fileImports.add(absPath)
-                            return `'${absPath}'`
+                            return JSON.stringify(absPath)
                         }
                     }
 
@@ -140,7 +140,7 @@ export default (options = {}) => {
 
                         visitedImports.add(nodeResolve)
                         fileImports.add(nodeResolve)
-                        return `'${nodeResolve}'`
+                        return JSON.stringify(nodeResolve)
                     }
 
                     this.warn(`Unresolved path in ${id}: ${name}`)

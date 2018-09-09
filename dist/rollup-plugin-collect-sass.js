@@ -86,7 +86,7 @@ var index = function (options) {
 
                         visitedImports.add(absPath);
                         fileImports.add(absPath);
-                        return ("'" + absPath + "'")
+                        return JSON.stringify(absPath)
                     }
 
                     if (fs.existsSync(path.join(relBase, dirName, ("_" + fileName)))) {
@@ -98,7 +98,7 @@ var index = function (options) {
 
                         visitedImports.add(absPath$1);
                         fileImports.add(absPath$1);
-                        return ("'" + absPath$1 + "'")
+                        return JSON.stringify(absPath$1)
                     }
 
                     for (var i = 0; i < importExtensions.length; i += 1) {
@@ -111,7 +111,7 @@ var index = function (options) {
 
                             visitedImports.add(absPath$2);
                             fileImports.add(absPath$2);
-                            return ("'" + absPath$2 + "'")
+                            return JSON.stringify(absPath$2)
                         }
                     }
 
@@ -125,7 +125,7 @@ var index = function (options) {
 
                             visitedImports.add(absPath$3);
                             fileImports.add(absPath$3);
-                            return ("'" + absPath$3 + "'")
+                            return JSON.stringify(absPath$3)
                         }
                     }
 
@@ -146,7 +146,7 @@ var index = function (options) {
 
                         visitedImports.add(nodeResolve);
                         fileImports.add(nodeResolve);
-                        return ("'" + nodeResolve + "'")
+                        return JSON.stringify(nodeResolve)
                     }
 
                     this$1.warn(("Unresolved path in " + id + ": " + name));
