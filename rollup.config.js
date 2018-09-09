@@ -12,6 +12,7 @@ export default {
         'style-inject',
         'node-sass',
         'rollup-pluginutils',
+        'mkdirp',
     ],
     plugins: [
         buble(),

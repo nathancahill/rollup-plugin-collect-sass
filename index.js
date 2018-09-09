@@ -5,6 +5,7 @@ import resolve from 'resolve'
 import styleInject from 'style-inject'
 import sass from 'node-sass'
 import { createFilter } from 'rollup-pluginutils'
+import mkdirp from 'mkdirp';
 
 const START_COMMENT_FLAG = '/* collect-postcss-start'
 const END_COMMENT_FLAG = 'collect-postcss-end */'
@@ -213,13 +214,21 @@ export default (options = {}) => {
             if (extract && cssExtract) {
                 if (extractFn) return extractFn(cssExtract, opts)
 
-                return new Promise((resolveExtract, rejectExtract) => {
-                    const destPath = extractPath ||
-                        path.join(path.dirname(opts.dest), `${path.basename(opts.dest, path.extname(opts.dest))}.css`)
+                const destPath = extractPath ||
+                    path.join(path.dirname(opts.dest), `${path.basename(opts.dest, path.extname(opts.dest))}.css`)
 
-                    fs.writeFile(destPath, cssExtract, err => {
-                        if (err) { rejectExtract(err) }
-                        resolveExtract()
+                return new Promise((resolveDir, rejectDir) => {
+                    mkdirp(path.dirname(destPath), err => {
+                        if (err) { rejectDir(err) }
+                        else resolveDir()
+                    });
+                }).then(() => {
+                    return new Promise((resolveExtract, rejectExtract) => {
+
+                        fs.writeFile(destPath, cssExtract, err => {
+                            if (err) { rejectExtract(err) }
+                            resolveExtract()
+                        })
                     })
                 })
             }

@@ -8,6 +8,7 @@ var resolve = _interopDefault(require('resolve'));
 var styleInject = _interopDefault(require('style-inject'));
 var sass = _interopDefault(require('node-sass'));
 var rollupPluginutils = require('rollup-pluginutils');
+var mkdirp = _interopDefault(require('mkdirp'));
 
 var START_COMMENT_FLAG = '/* collect-postcss-start';
 var END_COMMENT_FLAG = 'collect-postcss-end */';
@@ -32,6 +33,7 @@ var index = function (options) {
     var extensions = options.extensions || importExtensions;
     var filter = rollupPluginutils.createFilter(options.include || ['**/*.scss', '**/*.sass'], options.exclude);
     var extract = Boolean(options.extract);
+    var extractFn = typeof options.extract === 'function' ? options.extract : null;
     var extractPath = typeof options.extract === 'string' ? options.extract : null;
     var importOnce = Boolean(options.importOnce);
 
@@ -217,14 +219,24 @@ var index = function (options) {
         },
         onwrite: function onwrite (opts) {
             if (extract && cssExtract) {
-                return new Promise(function (resolveExtract, rejectExtract) {
-                    var destPath = extractPath ||
-                        path.join(path.dirname(opts.dest), ((path.basename(opts.dest, path.extname(opts.dest))) + ".css"));
+                if (extractFn) { return extractFn(cssExtract, opts) }
 
-                    fs.writeFile(destPath, cssExtract, function (err) {
-                        if (err) { rejectExtract(err); }
-                        resolveExtract();
+                var destPath = extractPath ||
+                    path.join(path.dirname(opts.dest), ((path.basename(opts.dest, path.extname(opts.dest))) + ".css"));
+
+                return new Promise(function (resolveDir, rejectDir) {
+                    mkdirp(path.dirname(destPath), function (err) {
+                        if (err) { rejectDir(err); }
+                        else { resolveDir(); }
                     });
+                }).then(function () {
+                    return new Promise(function (resolveExtract, rejectExtract) {
+
+                        fs.writeFile(destPath, cssExtract, function (err) {
+                            if (err) { rejectExtract(err); }
+                            resolveExtract();
+                        });
+                    })
                 })
             }
 
