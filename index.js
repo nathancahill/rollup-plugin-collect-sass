@@ -5,6 +5,7 @@ import resolve from 'resolve'
 import styleInject from 'style-inject'
 import sass from 'node-sass'
 import { createFilter } from 'rollup-pluginutils'
+import mkdirp from 'mkdirp';
 
 const START_COMMENT_FLAG = '/* collect-postcss-start'
 const END_COMMENT_FLAG = 'collect-postcss-end */'
@@ -80,7 +81,7 @@ export default (options = {}) => {
 
                         visitedImports.add(absPath)
                         fileImports.add(absPath)
-                        return `'${absPath}'`
+                        return JSON.stringify(absPath)
                     }
 
                     if (fs.existsSync(path.join(relBase, dirName, `_${fileName}`))) {
@@ -92,7 +93,7 @@ export default (options = {}) => {
 
                         visitedImports.add(absPath)
                         fileImports.add(absPath)
-                        return `'${absPath}'`
+                        return JSON.stringify(absPath)
                     }
 
                     for (let i = 0; i < importExtensions.length; i += 1) {
@@ -105,7 +106,7 @@ export default (options = {}) => {
 
                             visitedImports.add(absPath)
                             fileImports.add(absPath)
-                            return `'${absPath}'`
+                            return JSON.stringify(absPath)
                         }
                     }
 
@@ -119,7 +120,7 @@ export default (options = {}) => {
 
                             visitedImports.add(absPath)
                             fileImports.add(absPath)
-                            return `'${absPath}'`
+                            return JSON.stringify(absPath)
                         }
                     }
 
@@ -140,7 +141,7 @@ export default (options = {}) => {
 
                         visitedImports.add(nodeResolve)
                         fileImports.add(nodeResolve)
-                        return `'${nodeResolve}'`
+                        return JSON.stringify(nodeResolve)
                     }
 
                     this.warn(`Unresolved path in ${id}: ${name}`)
@@ -213,13 +214,21 @@ export default (options = {}) => {
             if (extract && cssExtract) {
                 if (extractFn) return extractFn(cssExtract, opts)
 
-                return new Promise((resolveExtract, rejectExtract) => {
-                    const destPath = extractPath ||
-                        path.join(path.dirname(opts.dest), `${path.basename(opts.dest, path.extname(opts.dest))}.css`)
+                const destPath = extractPath ||
+                    path.join(path.dirname(opts.dest), `${path.basename(opts.dest, path.extname(opts.dest))}.css`)
 
-                    fs.writeFile(destPath, cssExtract, err => {
-                        if (err) { rejectExtract(err) }
-                        resolveExtract()
+                return new Promise((resolveDir, rejectDir) => {
+                    mkdirp(path.dirname(destPath), err => {
+                        if (err) { rejectDir(err) }
+                        else resolveDir()
+                    });
+                }).then(() => {
+                    return new Promise((resolveExtract, rejectExtract) => {
+
+                        fs.writeFile(destPath, cssExtract, err => {
+                            if (err) { rejectExtract(err) }
+                            resolveExtract()
+                        })
                     })
                 })
             }
