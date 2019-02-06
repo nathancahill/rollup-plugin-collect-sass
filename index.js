@@ -148,8 +148,11 @@ export default (options = {}) => {
 
                     return orgName
                 })
-
+                
                 const uniquePaths = paths.filter(p => p !== null)
+
+                // On Windows node-sass requires imports to be C:\/test.scss instead of C:\test.scss 
+                uniquePaths = uniquePaths.map(path=>path.replace(/\\/g,'\/'));
 
                 if (uniquePaths.length) {
                     return `@import ${uniquePaths.join(', ')};`
